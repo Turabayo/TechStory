@@ -30,7 +30,7 @@ interface User {
   _id: string;
   name: string;
   email: string;
-  role: string;
+  role: "admin" | "user";
 }
 
 interface Story {
@@ -39,7 +39,7 @@ interface Story {
   content: string;
   storyType: string;
   category: string;
-  status: string;
+  status: "pending" | "published" | "rejected";
   views: number;
   shares: number;
   user?: User;
@@ -59,20 +59,21 @@ interface Analytics {
   totalViews: number;
   totalShares: number;
 }
+
 const AdminDashboard = () => {
   const { loading: authLoading } = useAuth();
   const router = useRouter();
 
-  const [activeTab, setActiveTab] = useState("Dashboard");
-  const [subTab, setSubTab] = useState("all");
-  const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<string>("Dashboard");
+  const [subTab, setSubTab] = useState<"all" | "pending">("all");
+  const [logoutDialogOpen, setLogoutDialogOpen] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(true);
 
   const [users, setUsers] = useState<User[]>([]);
   const [stories, setStories] = useState<Story[]>([]);
   const [comments, setComments] = useState<CommentType[]>([]);
   const [analytics, setAnalytics] = useState<Analytics>({ storyTrends: [], totalViews: 0, totalShares: 0 });
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState<string>("");
 
   const sidebarItems = [
     { text: "Dashboard", icon: <Dashboard />, tab: "Dashboard" },
@@ -81,9 +82,8 @@ const AdminDashboard = () => {
     { text: "Users", icon: <People />, tab: "Users" },
     { text: "Comments", icon: <Comment />, tab: "Comments" },
     { text: "Metrics", icon: <BarChart />, tab: "Metrics" },
-    { text: "Settings", icon: <Settings />, tab: "Settings" },
+    { text: "Settings", icon: <Settings />, tab: "Settings" }
   ];
-
   useEffect(() => {
     fetchAllAdminData();
   }, []);
@@ -93,11 +93,16 @@ const AdminDashboard = () => {
       const token = localStorage.getItem("token");
       const config = { headers: { Authorization: `Bearer ${token}` } };
 
-      const [usersRes, storiesRes, commentsRes, analyticsRes]: AxiosResponse[] = await Promise.all([
+      const [
+        usersRes,
+        storiesRes,
+        commentsRes,
+        analyticsRes
+      ]: AxiosResponse[] = await Promise.all([
         axios.get("http://localhost:5000/api/auth/users", config),
         axios.get("http://localhost:5000/api/stories/admin/all", config),
         axios.get("http://localhost:5000/api/comments", config),
-        axios.get("http://localhost:5000/api/analytics/stats", config),
+        axios.get("http://localhost:5000/api/analytics/stats", config)
       ]);
 
       setUsers(usersRes.data);
@@ -116,79 +121,85 @@ const AdminDashboard = () => {
     router.push("/auth/signin");
   };
 
-  const updateStoryStatus = async (id: string, status: string) => {
+  const updateStoryStatus = async (id: string, status: Story["status"]) => {
     try {
-      await axios.patch(`http://localhost:5000/api/stories/${id}/status`, { status }, {
-        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-      });
+      await axios.patch(
+        `http://localhost:5000/api/stories/${id}/status`,
+        { status },
+        { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
+      );
       fetchAllAdminData();
     } catch (err) {
-      console.error("❌ Failed to update status", err);
+      console.error("❌ Failed to update story status:", err);
     }
   };
 
   const deleteStory = async (id: string) => {
     try {
       await axios.delete(`http://localhost:5000/api/stories/${id}`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
       });
       fetchAllAdminData();
     } catch (err) {
-      console.error("❌ Failed to delete story", err);
+      console.error("❌ Failed to delete story:", err);
     }
   };
 
-  const promoteDemoteUser = async (id: string, role: string) => {
+  const promoteDemoteUser = async (id: string, role: User["role"]) => {
     try {
-      await axios.patch(`http://localhost:5000/api/auth/users/${id}/role`, { role }, {
-        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-      });
+      await axios.patch(
+        `http://localhost:5000/api/auth/users/${id}/role`,
+        { role },
+        { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
+      );
       fetchAllAdminData();
     } catch (err) {
-      console.error("❌ Failed to update role", err);
+      console.error("❌ Failed to update user role:", err);
     }
   };
 
   const deleteUser = async (id: string) => {
     try {
       await axios.delete(`http://localhost:5000/api/auth/users/${id}`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
       });
       fetchAllAdminData();
     } catch (err) {
-      console.error("❌ Failed to delete user", err);
+      console.error("❌ Failed to delete user:", err);
     }
   };
 
   const deleteComment = async (id: string) => {
     try {
       await axios.delete(`http://localhost:5000/api/comments/${id}`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
       });
       fetchAllAdminData();
     } catch (err) {
-      console.error("❌ Failed to delete comment", err);
+      console.error("❌ Failed to delete comment:", err);
     }
   };
 
   const exportStoriesToCSV = () => {
-    const data = stories.map((s) => ({
-      Title: s.title,
-      Author: s.user?.name || "Unknown",
-      Type: s.storyType,
-      Category: s.category,
-      Status: s.status,
-      Views: s.views,
-      Shares: s.shares,
+    const data = stories.map((story) => ({
+      Title: story.title,
+      Author: story.user?.name || "Unknown",
+      Type: story.storyType,
+      Category: story.category,
+      Status: story.status,
+      Views: story.views,
+      Shares: story.shares
     }));
-    const ws = utils.json_to_sheet(data);
-    const wb = utils.book_new();
-    utils.book_append_sheet(wb, ws, "Stories");
-    writeFile(wb, "HerTechStories.csv");
-  };
 
+    const worksheet = utils.json_to_sheet(data);
+    const workbook = utils.book_new();
+    utils.book_append_sheet(workbook, worksheet, "Stories");
+    writeFile(workbook, "HerTechStories.csv");
+  };
   const filteredStories = stories.filter((story) =>
-    `${story.title} ${story.content} ${story.user?.name || ""}`.toLowerCase().includes(searchQuery.toLowerCase())
+    `${story.title} ${story.content} ${story.user?.name || ""}`
+      .toLowerCase()
+      .includes(searchQuery.toLowerCase())
   );
 
   const filteredUsers = users.filter((user) =>
@@ -196,8 +207,8 @@ const AdminDashboard = () => {
     user.email.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const filteredComments = comments.filter((c) =>
-    c.text?.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredComments = comments.filter((comment) =>
+    comment.text?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const chartData = {
@@ -240,12 +251,12 @@ const AdminDashboard = () => {
       ))}
     </Grid>
   );
-  
+
   const renderStoriesTab = () => {
     const displayedStories = subTab === "pending"
-      ? filteredStories.filter(story => story.status === "pending")
+      ? filteredStories.filter((s) => s.status === "pending")
       : filteredStories;
-  
+
     return (
       <>
         <Box display="flex" justifyContent="space-between" mb={2}>
@@ -258,7 +269,7 @@ const AdminDashboard = () => {
           </Button>
         </Box>
         <Grid container spacing={2}>
-          {displayedStories.map(story => (
+          {displayedStories.map((story) => (
             <Grid item xs={12} md={6} lg={4} key={story._id}>
               <Card>
                 <CardContent>
@@ -288,7 +299,7 @@ const AdminDashboard = () => {
       </>
     );
   };
-  
+
   const renderUsersTab = () => (
     <Grid container spacing={2}>
       {filteredUsers.map((u) => (
@@ -311,6 +322,7 @@ const AdminDashboard = () => {
       ))}
     </Grid>
   );
+
   const renderCommentsTab = () => (
     <Grid container spacing={2}>
       {filteredComments.map((c) => (
@@ -338,7 +350,7 @@ const AdminDashboard = () => {
       ))}
     </Grid>
   );
-  
+
   const renderMetricsTab = () => (
     <Box>
       <Typography variant="h6" gutterBottom>
@@ -347,7 +359,7 @@ const AdminDashboard = () => {
       <Line data={chartData} />
     </Box>
   );
-  
+
   const renderSettingsTab = () => (
     <Box>
       <Typography variant="h6" gutterBottom>
@@ -358,5 +370,136 @@ const AdminDashboard = () => {
       </Typography>
     </Box>
   );
+  return (
+    <Box sx={{ display: "flex" }}>
+      <Drawer
+        variant="permanent"
+        sx={{
+          width: drawerWidth,
+          flexShrink: 0,
+          [`& .MuiDrawer-paper`]: {
+            width: drawerWidth,
+            boxSizing: "border-box",
+            bgcolor: "#6A1B9A",
+            color: "white",
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "space-between",
+          },
+        }}
+      >
+        <Box>
+          <Toolbar />
+          <List>
+            {sidebarItems.map(({ text, icon, tab }) => (
+              <ListItem
+                key={text}
+                onClick={() => setActiveTab(tab)}
+                sx={{
+                  cursor: "pointer",
+                  bgcolor: activeTab === tab ? "#9C27B0" : "transparent",
+                  color: activeTab === tab ? "white" : "#E1BEE7",
+                  "&:hover": { bgcolor: "#9C27B0", color: "white" },
+                }}
+              >
+                <ListItemIcon sx={{ color: activeTab === tab ? "white" : "#E1BEE7" }}>
+                  {icon}
+                </ListItemIcon>
+                <ListItemText primary={text} />
+              </ListItem>
+            ))}
+          </List>
+        </Box>
+        <Box sx={{ mb: 2 }}>
+          <Divider sx={{ bgcolor: "#E1BEE7", mx: 2 }} />
+          <List>
+            <ListItem
+              onClick={() => setLogoutDialogOpen(true)}
+              sx={{
+                cursor: "pointer",
+                color: "#E1BEE7",
+                "&:hover": { bgcolor: "#9C27B0", color: "white" },
+              }}
+            >
+              <ListItemIcon sx={{ color: "#E1BEE7" }}>
+                <ExitToApp />
+              </ListItemIcon>
+              <ListItemText primary="Logout" />
+            </ListItem>
+          </List>
+        </Box>
+      </Drawer>
 
-  
+      <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
+        <AppBar
+          position="fixed"
+          sx={{
+            width: `calc(100% - ${drawerWidth}px)`,
+            ml: `${drawerWidth}px`,
+            bgcolor: "#9C27B0",
+          }}
+        >
+          <Toolbar>
+            <Typography variant="h6" sx={{ flexGrow: 1 }}>
+              HerTechStory Admin
+            </Typography>
+            <Box sx={{ display: "flex", alignItems: "center" }}>
+              <InputBase
+                placeholder="Search..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                sx={{
+                  bgcolor: "white",
+                  borderRadius: 1,
+                  px: 1,
+                  mr: 2,
+                }}
+              />
+              <IconButton sx={{ color: "white" }}>
+                <Search />
+              </IconButton>
+              <IconButton sx={{ color: "white" }}>
+                <Notifications />
+              </IconButton>
+              <IconButton sx={{ color: "white" }}>
+                <AccountCircle />
+              </IconButton>
+              <IconButton onClick={() => setLogoutDialogOpen(true)} sx={{ color: "white" }}>
+                <LogoutIcon />
+              </IconButton>
+            </Box>
+          </Toolbar>
+        </AppBar>
+
+        <Toolbar />
+        <Typography variant="h4" fontWeight="bold" gutterBottom>
+          {activeTab}
+        </Typography>
+
+        {["Stories", "Pending Approvals"].includes(activeTab) && renderStoriesTab()}
+        {activeTab === "Dashboard" && renderDashboardCards()}
+        {activeTab === "Users" && renderUsersTab()}
+        {activeTab === "Comments" && renderCommentsTab()}
+        {activeTab === "Metrics" && renderMetricsTab()}
+        {activeTab === "Settings" && renderSettingsTab()}
+
+        <Dialog open={logoutDialogOpen} onClose={() => setLogoutDialogOpen(false)}>
+          <DialogTitle>Confirm Logout</DialogTitle>
+          <DialogContent>
+            <DialogContentText>
+              Are you sure you want to log out?
+            </DialogContentText>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setLogoutDialogOpen(false)}>Cancel</Button>
+            <Button onClick={handleLogout} color="error" variant="contained">
+              Logout
+            </Button>
+          </DialogActions>
+        </Dialog>
+      </Box>
+    </Box>
+  );
+};
+
+export default AdminDashboard;
