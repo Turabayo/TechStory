@@ -4,14 +4,8 @@ import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import axios, { AxiosError } from "axios";
 
-interface UserData {
-  role: "admin" | "user";
-  onboarded: boolean;
-  [key: string]: any;
-}
-
 const useAuthMiddleware = () => {
-  const [user, setUser] = useState<UserData | null>(null);
+  const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
   const pathname = usePathname();
@@ -31,20 +25,18 @@ const useAuthMiddleware = () => {
           headers: { Authorization: `Bearer ${token}` },
         });
 
-        const userData: UserData = res.data;
+        const userData = res.data;
         setUser(userData);
 
-        // ✅ Role-based redirect
         if (userData.role === "admin" && pathname.startsWith("/user")) {
           console.warn("👑 Admin trying to access user dashboard. Redirecting to /admin...");
           router.push("/admin");
           return;
         }
 
-        // ✅ Onboarding logic for standard users
         if (userData.role === "user") {
           if (!userData.onboarded && pathname !== "/user/onboard") {
-            console.warn("⏳ Not onboarded. Redirecting to /user/onboard...");
+            console.warn("⏳ Standard user not onboarded. Redirecting to /user/onboard...");
             router.push("/user/onboard");
           } else if (userData.onboarded && pathname === "/user/onboard") {
             console.warn("✅ Already onboarded. Redirecting to /user...");
@@ -56,9 +48,8 @@ const useAuthMiddleware = () => {
         if (axios.isAxiosError(err)) {
           console.error("🚫 Auth failed:", err.response?.data || err.message);
         } else {
-          console.error("🚫 Unknown error:", JSON.stringify(err));
+          console.error("🚫 Auth failed with unknown error:", err);
         }
-
         localStorage.removeItem("token");
         router.push("/auth/signin");
       } finally {
