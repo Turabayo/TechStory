@@ -1,6 +1,5 @@
 "use client";
 
-// ✅ Add to Admin Dashboard: Pending Approvals Tab (Minimal version)
 import { useEffect, useState } from "react";
 import axios from "axios";
 import {
@@ -19,7 +18,8 @@ const PendingApprovals = () => {
   const [pendingStories, setPendingStories] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+  const token =
+    typeof window !== "undefined" ? localStorage.getItem("token") : null;
 
   useEffect(() => {
     fetchPending();
@@ -27,9 +27,12 @@ const PendingApprovals = () => {
 
   const fetchPending = async () => {
     try {
-      const res = await axios.get("http://localhost:5000/api/stories/admin/pending", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await axios.get(
+        "http://localhost:5000/api/stories/admin/pending",
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
       setPendingStories(res.data);
     } catch (err) {
       console.error("Error fetching pending stories", err);
@@ -40,9 +43,13 @@ const PendingApprovals = () => {
 
   const handleApprove = async (id: string) => {
     try {
-      await axios.put(`http://localhost:5000/api/stories/admin/${id}/approve`, {}, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await axios.put(
+        `http://localhost:5000/api/stories/admin/${id}/approve`,
+        {},
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
       fetchPending();
     } catch (err) {
       console.error("Error approving story", err);
@@ -51,9 +58,13 @@ const PendingApprovals = () => {
 
   const handleReject = async (id: string) => {
     try {
-      await axios.put(`http://localhost:5000/api/stories/admin/${id}/reject`, {}, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await axios.put(
+        `http://localhost:5000/api/stories/admin/${id}/reject`,
+        {},
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
       fetchPending();
     } catch (err) {
       console.error("Error rejecting story", err);
@@ -82,7 +93,11 @@ const PendingApprovals = () => {
                   </Typography>
                   <Box sx={{ display: "flex", gap: 1, mt: 2 }}>
                     <Chip label={story.storyType} color="info" size="small" />
-                    <Chip label={story.status} color="warning" size="small" />
+                    <Chip
+                      label={story.status}
+                      color="warning"
+                      size="small"
+                    />
                   </Box>
 
                   <Box sx={{ display: "flex", gap: 1, mt: 2 }}>
