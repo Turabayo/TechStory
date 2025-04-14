@@ -88,7 +88,11 @@ const PendingApprovals = () => {
                   <Typography variant="h6" fontWeight="bold">
                     {story.title}
                   </Typography>
-                  <Typography variant="body2" color="textSecondary" gutterBottom>
+                  <Typography
+                    variant="body2"
+                    color="textSecondary"
+                    gutterBottom
+                  >
                     {story.content?.substring(0, 100)}...
                   </Typography>
                   <Box sx={{ display: "flex", gap: 1, mt: 2 }}>
