@@ -2,10 +2,16 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import axios, { AxiosError } from "axios";
+import axios from "axios";
+
+interface UserData {
+  role: "admin" | "user";
+  onboarded: boolean;
+  [key: string]: any;
+}
 
 const useAuthMiddleware = () => {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
   const pathname = usePathname();
@@ -25,15 +31,17 @@ const useAuthMiddleware = () => {
           headers: { Authorization: `Bearer ${token}` },
         });
 
-        const userData = res.data;
+        const userData: UserData = res.data;
         setUser(userData);
 
+        // ✅ Role-based redirect
         if (userData.role === "admin" && pathname.startsWith("/user")) {
           console.warn("👑 Admin trying to access user dashboard. Redirecting to /admin...");
           router.push("/admin");
           return;
         }
 
+        // ✅ Onboarding logic for standard users
         if (userData.role === "user") {
           if (!userData.onboarded && pathname !== "/user/onboard") {
             console.warn("⏳ Standard user not onboarded. Redirecting to /user/onboard...");
@@ -45,12 +53,16 @@ const useAuthMiddleware = () => {
         }
 
       } catch (err: unknown) {
-        if (axios.isAxiosError(err)) {
-          console.error("🚫 Auth failed:", err.response?.data || err.message);
+        if (err && typeof err === "object" && "response" in err) {
+          const axiosErr = err as {
+            response?: { data?: any };
+            message?: string;
+          };
+          console.error("🚫 Auth failed:", axiosErr.response?.data || axiosErr.message);
         } else if (err instanceof Error) {
           console.error("🚫 Auth failed:", err.message);
         } else {
-          console.error("🚫 Auth failed: Unknown error", err);
+          console.error("🚫 Auth failed:", err);
         }
 
         localStorage.removeItem("token");
