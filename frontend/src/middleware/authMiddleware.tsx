@@ -47,7 +47,12 @@ const useAuthMiddleware = () => {
         }
 
       } catch (err) {
-        console.error("🚫 Auth failed:", err.response?.data || err.message);
+        if (err instanceof Error) {
+          console.error("🚫 Auth failed:", err.message);
+        } else {
+          console.error("🚫 Auth failed:", err);
+        }
+
         localStorage.removeItem("token");
         router.push("/auth/signin");
       } finally {
