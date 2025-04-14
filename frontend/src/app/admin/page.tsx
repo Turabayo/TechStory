@@ -1,18 +1,18 @@
-// frontend/src/app/admin/page.tsx
 "use client";
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import axios from "axios";
+import axios, { AxiosResponse } from "axios";
 import {
-  Typography, Grid, Card, CardContent, CircularProgress, Box, AppBar, Toolbar, IconButton, InputBase,
-  Drawer, List, ListItem, ListItemIcon, ListItemText, Divider, Dialog, DialogTitle, DialogContent,
-  DialogContentText, DialogActions, Button, Tabs, Tab, Stack, Chip, Select, MenuItem
+  Typography, Grid, Card, CardContent, CircularProgress, Box, AppBar, Toolbar,
+  IconButton, InputBase, Drawer, List, ListItem, ListItemIcon, ListItemText, Divider,
+  Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions, Button,
+  Tabs, Tab, Stack, Chip, Select, MenuItem
 } from "@mui/material";
 import {
   Dashboard, Book, People, BarChart, Settings, ExitToApp, LibraryBooks, HourglassEmpty,
-  PeopleAlt, Comment, Visibility, Share, Search, Notifications, AccountCircle, Logout as LogoutIcon,
-  ThumbUp, Cancel, Delete, Download
+  PeopleAlt, Comment, Visibility, Share, Search, Notifications, AccountCircle,
+  Logout as LogoutIcon, ThumbUp, Cancel, Delete, Download
 } from "@mui/icons-material";
 import { Line } from "react-chartjs-2";
 import {
@@ -26,8 +26,41 @@ ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, T
 
 const drawerWidth = 240;
 
+interface User {
+  _id: string;
+  name: string;
+  email: string;
+  role: string;
+}
+
+interface Story {
+  _id: string;
+  title: string;
+  content: string;
+  storyType: string;
+  category: string;
+  status: string;
+  views: number;
+  shares: number;
+  user?: User;
+}
+
+interface CommentType {
+  _id: string;
+  text: string;
+  user?: User;
+  story?: {
+    title: string;
+  };
+}
+
+interface Analytics {
+  storyTrends: number[];
+  totalViews: number;
+  totalShares: number;
+}
 const AdminDashboard = () => {
-  const { user, loading: authLoading } = useAuth();
+  const { loading: authLoading } = useAuth();
   const router = useRouter();
 
   const [activeTab, setActiveTab] = useState("Dashboard");
@@ -35,11 +68,21 @@ const AdminDashboard = () => {
   const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  const [users, setUsers] = useState([]);
-  const [stories, setStories] = useState([]);
-  const [comments, setComments] = useState([]);
-  const [analytics, setAnalytics] = useState({ storyTrends: [], totalViews: 0, totalShares: 0 });
+  const [users, setUsers] = useState<User[]>([]);
+  const [stories, setStories] = useState<Story[]>([]);
+  const [comments, setComments] = useState<CommentType[]>([]);
+  const [analytics, setAnalytics] = useState<Analytics>({ storyTrends: [], totalViews: 0, totalShares: 0 });
   const [searchQuery, setSearchQuery] = useState("");
+
+  const sidebarItems = [
+    { text: "Dashboard", icon: <Dashboard />, tab: "Dashboard" },
+    { text: "Stories", icon: <Book />, tab: "Stories" },
+    { text: "Pending Approvals", icon: <HourglassEmpty />, tab: "Pending Approvals" },
+    { text: "Users", icon: <People />, tab: "Users" },
+    { text: "Comments", icon: <Comment />, tab: "Comments" },
+    { text: "Metrics", icon: <BarChart />, tab: "Metrics" },
+    { text: "Settings", icon: <Settings />, tab: "Settings" },
+  ];
 
   useEffect(() => {
     fetchAllAdminData();
@@ -50,7 +93,7 @@ const AdminDashboard = () => {
       const token = localStorage.getItem("token");
       const config = { headers: { Authorization: `Bearer ${token}` } };
 
-      const [usersRes, storiesRes, commentsRes, analyticsRes] = await Promise.all([
+      const [usersRes, storiesRes, commentsRes, analyticsRes]: AxiosResponse[] = await Promise.all([
         axios.get("http://localhost:5000/api/auth/users", config),
         axios.get("http://localhost:5000/api/stories/admin/all", config),
         axios.get("http://localhost:5000/api/comments", config),
@@ -129,7 +172,7 @@ const AdminDashboard = () => {
   };
 
   const exportStoriesToCSV = () => {
-    const data = stories.map((s: any) => ({
+    const data = stories.map((s) => ({
       Title: s.title,
       Author: s.user?.name || "Unknown",
       Type: s.storyType,
@@ -144,16 +187,16 @@ const AdminDashboard = () => {
     writeFile(wb, "HerTechStories.csv");
   };
 
-  const filteredStories = stories.filter((story: any) =>
+  const filteredStories = stories.filter((story) =>
     `${story.title} ${story.content} ${story.user?.name || ""}`.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const filteredUsers = users.filter((user: any) =>
+  const filteredUsers = users.filter((user) =>
     user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     user.email.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const filteredComments = comments.filter((c: any) =>
+  const filteredComments = comments.filter((c) =>
     c.text?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
@@ -170,33 +213,52 @@ const AdminDashboard = () => {
     ],
   };
 
-  const sidebarItems = [
-    { text: "Dashboard", icon: <Dashboard />, tab: "Dashboard" },
-    { text: "Stories", icon: <Book />, tab: "Stories" },
-    { text: "Pending Approvals", icon: <HourglassEmpty />, tab: "Pending Approvals" },
-    { text: "Users", icon: <People />, tab: "Users" },
-    { text: "Comments", icon: <Comment />, tab: "Comments" },
-    { text: "Metrics", icon: <BarChart />, tab: "Metrics" },
-    { text: "Settings", icon: <Settings />, tab: "Settings" },
-  ];
-
+  if (authLoading || loading) {
+    return <CircularProgress sx={{ display: "block", margin: "auto", mt: 5 }} />;
+  }
+  const renderDashboardCards = () => (
+    <Grid container spacing={3}>
+      {[
+        { label: "Total Users", value: users.length, icon: <PeopleAlt sx={{ fontSize: 40, color: "#6A1B9A" }} /> },
+        { label: "Published Stories", value: stories.filter(s => s.status === "published").length, icon: <LibraryBooks sx={{ fontSize: 40, color: "#6A1B9A" }} /> },
+        { label: "Pending Approvals", value: stories.filter(s => s.status === "pending").length, icon: <HourglassEmpty sx={{ fontSize: 40, color: "#6A1B9A" }} /> },
+        { label: "Total Comments", value: comments.length, icon: <Comment sx={{ fontSize: 40, color: "#6A1B9A" }} /> },
+        { label: "Total Views", value: analytics.totalViews, icon: <Visibility sx={{ fontSize: 40, color: "#6A1B9A" }} /> },
+        { label: "Total Shares", value: analytics.totalShares, icon: <Share sx={{ fontSize: 40, color: "#6A1B9A" }} /> },
+      ].map(({ label, value, icon }, index) => (
+        <Grid item xs={12} md={4} key={index}>
+          <Card>
+            <CardContent>
+              <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                {icon}
+                <Typography variant="h6">{label}</Typography>
+              </Box>
+              <Typography variant="h4">{value}</Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+      ))}
+    </Grid>
+  );
+  
   const renderStoriesTab = () => {
-    const displayedStories =
-      subTab === "pending"
-        ? filteredStories.filter((story: any) => story.status === "pending")
-        : filteredStories;
-
+    const displayedStories = subTab === "pending"
+      ? filteredStories.filter(story => story.status === "pending")
+      : filteredStories;
+  
     return (
       <>
         <Box display="flex" justifyContent="space-between" mb={2}>
-          <Tabs value={subTab} onChange={(e, val) => setSubTab(val)} textColor="secondary" indicatorColor="secondary">
+          <Tabs value={subTab} onChange={(_, val) => setSubTab(val)} textColor="secondary" indicatorColor="secondary">
             <Tab label="All Stories" value="all" />
             <Tab label="Pending Approvals" value="pending" />
           </Tabs>
-          <Button startIcon={<Download />} variant="outlined" onClick={exportStoriesToCSV}>Export CSV</Button>
+          <Button startIcon={<Download />} variant="outlined" onClick={exportStoriesToCSV}>
+            Export CSV
+          </Button>
         </Box>
         <Grid container spacing={2}>
-          {displayedStories.map((story: any) => (
+          {displayedStories.map(story => (
             <Grid item xs={12} md={6} lg={4} key={story._id}>
               <Card>
                 <CardContent>
@@ -206,7 +268,7 @@ const AdminDashboard = () => {
                     <Chip label={story.storyType} color="primary" size="small" />
                     <Chip label={story.status} color={
                       story.status === "published" ? "success"
-                        : story.status === "pending" ? "warning" : "default"
+                      : story.status === "pending" ? "warning" : "default"
                     } size="small" />
                   </Stack>
                   <Box display="flex" gap={1} flexWrap="wrap">
@@ -226,10 +288,10 @@ const AdminDashboard = () => {
       </>
     );
   };
-
+  
   const renderUsersTab = () => (
     <Grid container spacing={2}>
-      {filteredUsers.map((u: any) => (
+      {filteredUsers.map((u) => (
         <Grid item xs={12} md={6} lg={4} key={u._id}>
           <Card>
             <CardContent>
@@ -249,152 +311,52 @@ const AdminDashboard = () => {
       ))}
     </Grid>
   );
-
   const renderCommentsTab = () => (
     <Grid container spacing={2}>
-      {filteredComments.map((c: any) => (
+      {filteredComments.map((c) => (
         <Grid item xs={12} key={c._id}>
           <Card>
             <CardContent>
-              <Typography variant="subtitle1"><strong>Comment:</strong> {c.text}</Typography>
+              <Typography variant="subtitle1">
+                <strong>Comment:</strong> {c.text}
+              </Typography>
               <Typography variant="body2" color="text.secondary">
                 By: {c.user?.name || "Unknown"} | On Story: {c.story?.title || "Unknown"}
               </Typography>
-              <Button size="small" color="error" variant="outlined" sx={{ mt: 1 }} onClick={() => deleteComment(c._id)}>Delete</Button>
+              <Button
+                size="small"
+                color="error"
+                variant="outlined"
+                sx={{ mt: 1 }}
+                onClick={() => deleteComment(c._id)}
+              >
+                Delete
+              </Button>
             </CardContent>
           </Card>
         </Grid>
       ))}
     </Grid>
   );
-
+  
   const renderMetricsTab = () => (
     <Box>
-      <Typography variant="h6" gutterBottom>Story Trends</Typography>
+      <Typography variant="h6" gutterBottom>
+        Story Trends
+      </Typography>
       <Line data={chartData} />
     </Box>
   );
-
+  
   const renderSettingsTab = () => (
     <Box>
-      <Typography variant="h6" gutterBottom>Settings</Typography>
-      <Typography variant="body2">You can add theme settings, export formats, or preferences here.</Typography>
+      <Typography variant="h6" gutterBottom>
+        Settings
+      </Typography>
+      <Typography variant="body2">
+        You can add theme settings, export formats, or preferences here.
+      </Typography>
     </Box>
   );
 
-  if (authLoading || loading) {
-    return <CircularProgress sx={{ display: "block", margin: "auto", mt: 5 }} />;
-  }
-
-  return (
-    <Box sx={{ display: "flex" }}>
-      <Drawer
-        variant="permanent"
-        sx={{
-          width: drawerWidth,
-          flexShrink: 0,
-          [`& .MuiDrawer-paper`]: {
-            width: drawerWidth,
-            boxSizing: "border-box",
-            bgcolor: "#6A1B9A",
-            color: "white",
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "space-between",
-          },
-        }}
-      >
-        <Box>
-          <Toolbar />
-          <List>
-            {sidebarItems.map(({ text, icon, tab }) => (
-              <ListItem
-                key={text}
-                onClick={() => setActiveTab(tab)}
-                sx={{
-                  cursor: "pointer",
-                  bgcolor: activeTab === tab ? "#9C27B0" : "transparent",
-                  color: activeTab === tab ? "white" : "#E1BEE7",
-                  "&:hover": { bgcolor: "#9C27B0", color: "white" },
-                }}
-              >
-                <ListItemIcon sx={{ color: activeTab === tab ? "white" : "#E1BEE7" }}>{icon}</ListItemIcon>
-                <ListItemText primary={text} />
-              </ListItem>
-            ))}
-          </List>
-        </Box>
-        <Box sx={{ mb: 2 }}>
-          <Divider sx={{ bgcolor: "#E1BEE7", mx: 2 }} />
-          <List>
-            <ListItem onClick={() => setLogoutDialogOpen(true)} sx={{ cursor: "pointer", color: "#E1BEE7", "&:hover": { bgcolor: "#9C27B0", color: "white" } }}>
-              <ListItemIcon sx={{ color: "#E1BEE7" }}><ExitToApp /></ListItemIcon>
-              <ListItemText primary="Logout" />
-            </ListItem>
-          </List>
-        </Box>
-      </Drawer>
-
-      <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
-        <AppBar position="fixed" sx={{ width: `calc(100% - ${drawerWidth}px)`, ml: `${drawerWidth}px`, bgcolor: "#9C27B0" }}>
-          <Toolbar>
-            <Typography variant="h6" sx={{ flexGrow: 1 }}>HerTechStory Admin</Typography>
-            <Box sx={{ display: "flex", alignItems: "center" }}>
-              <InputBase placeholder="Search..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} sx={{ bgcolor: "white", borderRadius: 1, px: 1, mr: 2 }} />
-              <IconButton sx={{ color: "white" }}><Search /></IconButton>
-              <IconButton sx={{ color: "white" }}><Notifications /></IconButton>
-              <IconButton sx={{ color: "white" }}><AccountCircle /></IconButton>
-              <IconButton onClick={() => setLogoutDialogOpen(true)} sx={{ color: "white" }}><LogoutIcon /></IconButton>
-            </Box>
-          </Toolbar>
-        </AppBar>
-        <Toolbar />
-
-        <Typography variant="h4" fontWeight="bold" gutterBottom>{activeTab}</Typography>
-
-        {["Stories", "Pending Approvals"].includes(activeTab) && renderStoriesTab()}
-        {activeTab === "Dashboard" && (
-          <Grid container spacing={3}>
-            {[ 
-              { label: "Total Users", value: users.length, icon: <PeopleAlt sx={{ fontSize: 40, color: "#6A1B9A" }} /> },
-              { label: "Published Stories", value: stories.filter((s: any) => s.status === "published").length, icon: <LibraryBooks sx={{ fontSize: 40, color: "#6A1B9A" }} /> },
-              { label: "Pending Approvals", value: stories.filter((s: any) => s.status === "pending").length, icon: <HourglassEmpty sx={{ fontSize: 40, color: "#6A1B9A" }} /> },
-              { label: "Total Comments", value: comments.length, icon: <Comment sx={{ fontSize: 40, color: "#6A1B9A" }} /> },
-              { label: "Total Views", value: analytics.totalViews, icon: <Visibility sx={{ fontSize: 40, color: "#6A1B9A" }} /> },
-              { label: "Total Shares", value: analytics.totalShares, icon: <Share sx={{ fontSize: 40, color: "#6A1B9A" }} /> },
-            ].map(({ label, value, icon }, index) => (
-              <Grid item xs={12} md={4} key={index}>
-                <Card>
-                  <CardContent>
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-                      {icon}
-                      <Typography variant="h6">{label}</Typography>
-                    </Box>
-                    <Typography variant="h4">{value}</Typography>
-                  </CardContent>
-                </Card>
-              </Grid>
-            ))}
-          </Grid>
-        )}
-        {activeTab === "Users" && renderUsersTab()}
-        {activeTab === "Comments" && renderCommentsTab()}
-        {activeTab === "Metrics" && renderMetricsTab()}
-        {activeTab === "Settings" && renderSettingsTab()}
-
-        <Dialog open={logoutDialogOpen} onClose={() => setLogoutDialogOpen(false)}>
-          <DialogTitle>Confirm Logout</DialogTitle>
-          <DialogContent>
-            <DialogContentText>Are you sure you want to log out?</DialogContentText>
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={() => setLogoutDialogOpen(false)}>Cancel</Button>
-            <Button onClick={handleLogout} color="error" variant="contained">Logout</Button>
-          </DialogActions>
-        </Dialog>
-      </Box>
-    </Box>
-  );
-};
-
-export default AdminDashboard;
+  
