@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 
 interface UserData {
   role: "admin" | "user";
@@ -44,7 +44,7 @@ const useAuthMiddleware = () => {
         // ✅ Onboarding logic for standard users
         if (userData.role === "user") {
           if (!userData.onboarded && pathname !== "/user/onboard") {
-            console.warn("⏳ Standard user not onboarded. Redirecting to /user/onboard...");
+            console.warn("⏳ Not onboarded. Redirecting to /user/onboard...");
             router.push("/user/onboard");
           } else if (userData.onboarded && pathname === "/user/onboard") {
             console.warn("✅ Already onboarded. Redirecting to /user...");
@@ -52,17 +52,12 @@ const useAuthMiddleware = () => {
           }
         }
 
-      } catch (err: unknown) {
-        if (err && typeof err === "object" && "response" in err) {
-          const axiosErr = err as {
-            response?: { data?: any };
-            message?: string;
-          };
-          console.error("🚫 Auth failed:", axiosErr.response?.data || axiosErr.message);
-        } else if (err instanceof Error) {
-          console.error("🚫 Auth failed:", err.message);
+      } catch (err) {
+        // Type the error as AxiosError or unknown
+        if (err instanceof AxiosError) {
+          console.error("🚫 Auth failed:", err.response?.data || err.message);
         } else {
-          console.error("🚫 Auth failed:", err);
+          console.error("🚫 Unknown error during auth check:", err);
         }
 
         localStorage.removeItem("token");
