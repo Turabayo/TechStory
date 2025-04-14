@@ -52,12 +52,11 @@ const useAuthMiddleware = () => {
           }
         }
 
-      } catch (err) {
-        // Type the error as AxiosError or unknown
-        if (err instanceof AxiosError) {
+      } catch (err: unknown) {
+        if (axios.isAxiosError(err)) {
           console.error("🚫 Auth failed:", err.response?.data || err.message);
         } else {
-          console.error("🚫 Unknown error during auth check:", err);
+          console.error("🚫 Unknown error:", JSON.stringify(err));
         }
 
         localStorage.removeItem("token");
