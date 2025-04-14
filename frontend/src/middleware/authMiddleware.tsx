@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 
 const useAuthMiddleware = () => {
   const [user, setUser] = useState(null);
@@ -28,14 +28,12 @@ const useAuthMiddleware = () => {
         const userData = res.data;
         setUser(userData);
 
-        // ✅ Role-based redirect
         if (userData.role === "admin" && pathname.startsWith("/user")) {
           console.warn("👑 Admin trying to access user dashboard. Redirecting to /admin...");
           router.push("/admin");
           return;
         }
 
-        // ✅ Onboarding logic for standard users only
         if (userData.role === "user") {
           if (!userData.onboarded && pathname !== "/user/onboard") {
             console.warn("⏳ Standard user not onboarded. Redirecting to /user/onboard...");
@@ -46,11 +44,13 @@ const useAuthMiddleware = () => {
           }
         }
 
-      } catch (err) {
-        if (err instanceof Error) {
+      } catch (err: unknown) {
+        if (axios.isAxiosError(err)) {
+          console.error("🚫 Auth failed:", err.response?.data || err.message);
+        } else if (err instanceof Error) {
           console.error("🚫 Auth failed:", err.message);
         } else {
-          console.error("🚫 Auth failed:", err);
+          console.error("🚫 Auth failed: Unknown error", err);
         }
 
         localStorage.removeItem("token");
