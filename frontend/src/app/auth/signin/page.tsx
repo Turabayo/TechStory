@@ -1,7 +1,17 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Container, TextField, Button, Typography, Box, Paper, Checkbox, FormControlLabel, Alert } from "@mui/material";
+import {
+  Container,
+  TextField,
+  Button,
+  Typography,
+  Box,
+  Paper,
+  Checkbox,
+  FormControlLabel,
+  Alert,
+} from "@mui/material";
 import { useRouter } from "next/navigation";
 import axios from "axios";
 
@@ -12,6 +22,8 @@ const SignIn = () => {
   const [success, setSuccess] = useState("");
   const [mounted, setMounted] = useState(false);
   const router = useRouter();
+
+  const API = process.env.NEXT_PUBLIC_API_URL;
 
   useEffect(() => {
     setMounted(true);
@@ -24,7 +36,7 @@ const SignIn = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const res = await axios.post("http://localhost:5000/api/auth/login", { email, password });
+      const res = await axios.post(`${API}/api/auth/login`, { email, password });
 
       if (res.status === 200) {
         const { token, user } = res.data;
@@ -43,7 +55,7 @@ const SignIn = () => {
           router.push("/user");
         }
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error("❌ Login failed:", err);
       setError("Invalid credentials. Please try again.");
       setSuccess("");
@@ -51,8 +63,20 @@ const SignIn = () => {
   };
 
   return (
-    <Container maxWidth="sm" sx={{ height: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
-      <Paper elevation={4} sx={{ padding: 4, textAlign: "center", width: "100%", maxWidth: 400, bgcolor: "white" }}>
+    <Container
+      maxWidth="sm"
+      sx={{ height: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}
+    >
+      <Paper
+        elevation={4}
+        sx={{
+          padding: 4,
+          textAlign: "center",
+          width: "100%",
+          maxWidth: 400,
+          bgcolor: "white",
+        }}
+      >
         <Typography variant="h4" fontWeight="bold" gutterBottom sx={{ color: "#6A1B9A" }}>
           Sign In
         </Typography>
@@ -86,7 +110,12 @@ const SignIn = () => {
             type="submit"
             variant="contained"
             fullWidth
-            sx={{ mt: 2, bgcolor: "#9C27B0", color: "white", "&:hover": { bgcolor: "#7B1FA2" } }}
+            sx={{
+              mt: 2,
+              bgcolor: "#9C27B0",
+              color: "white",
+              "&:hover": { bgcolor: "#7B1FA2" },
+            }}
           >
             Sign In
           </Button>
