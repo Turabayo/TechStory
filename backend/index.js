@@ -19,17 +19,16 @@ const PORT = process.env.PORT || 5000;
 
 // ✅ CORS Configuration
 const allowedOrigins = [
-  "http://localhost:3000", // Local development
-  "https://hertechstoryempoweringwomenempoweringgenerations-heps4zmhu.vercel.app", // Vercel deployment
+  'http://localhost:3000',
+  'https://hertechstoryempoweringwomenempoweringgenerations-kcy2m8jmc.vercel.app', // Your real Vercel domain
+  'https://techstory.vercel.app', // Optional if you mapped a custom domain
 ];
 
 app.use(cors({
   origin: function (origin, callback) {
-    if (!origin) return callback(null, true); // allow requests with no origin (e.g., Postman, curl)
-    if (allowedOrigins.includes(origin)) {
-      return callback(null, true);
-    }
-    return callback(new Error("Not allowed by CORS"));
+    if (!origin) return callback(null, true); // allow requests with no origin
+    if (allowedOrigins.includes(origin)) return callback(null, true);
+    return callback(new Error('Not allowed by CORS'));
   },
   credentials: true,
 }));
@@ -42,7 +41,7 @@ app.use(session({
   saveUninitialized: false,
 }));
 
-// ✅ Serve static uploads folder (audio/video files)
+// ✅ Serve static uploads folder
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // ✅ MongoDB Connection
@@ -50,8 +49,8 @@ mongoose.connect(process.env.MONGO_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
 })
-.then(() => console.log('MongoDB Connected'))
-.catch(err => console.log(err));
+  .then(() => console.log('MongoDB Connected'))
+  .catch(err => console.error('MongoDB Error:', err));
 
 // ✅ Routes
 app.use('/api/auth', authRoutes);
@@ -64,6 +63,7 @@ app.get('/', (req, res) => {
   res.send('HerTechStory API is running!');
 });
 
+// ✅ Start Server
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
 });
