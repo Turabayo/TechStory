@@ -28,7 +28,7 @@ npm install
 ### 2. Create environment file
 Create `.env.local` in `frontend/`:
 ```env
-NEXT_PUBLIC_BACKEND_URL=http://localhost:5000
+NEXT_PUBLIC_API_URL=https://techstory.onrender.com
 ```
 
 ### 3. Run the frontend
@@ -45,6 +45,11 @@ Runs at: `http://localhost:3000`
 - `middleware/` - Route protection
 - `theme.ts` - MUI customization
 
+## 🌍 Live URLs
+
+- **Production App:** 👉 https://hertechstoryempoweringwomenempoweringge-immas-projects-ce0366f0.vercel.app/
+- **Signup Page:** 👉 https://hertechstoryempoweringwomenempoweringge-immas-projects-ce0366f0.vercel.app/auth/signup
+- **Signin Page:** 👉 https://hertechstoryempoweringwomenempoweringge-immas-projects-ce0366f0.vercel.app/auth/signin
 
 
 # HerTechStory Backend
@@ -75,6 +80,8 @@ PORT=5000
 MONGO_URI=your_mongodb_connection_string
 JWT_SECRET=your_jwt_secret
 GOOGLE_APPLICATION_CREDENTIALS=./config/gcp-key.json
+SESSION_SECRET=your_session_secret
+GCS_BUCKET_NAME=your_gcs_bucket_name
 ```
 
 > 📝 Ensure `gcp-key.json` exists if using Google Cloud transcription.
@@ -97,23 +104,9 @@ Server will run at: `http://localhost:5000`
 
 ## 🧠 AI Integration
 
-- Speech-to-Text: Google Cloud or Whisper
-- Text-to-Speech: Google or custom utils
+- **Speech-to-Text**: Google Cloud or Whisper
+- **Text-to-Speech**: Google or custom utils
 
+---
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// trigger build
+_Last updated: April 15, 2025_
