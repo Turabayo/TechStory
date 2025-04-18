@@ -1,0 +1,16 @@
+# backend/.gitignore
+
+# Node modules
+/node_modules
+
+# Environment variables
+.env
+.env.local
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Uploads (optional – remove this if you want to commit sample files)
+/uploads

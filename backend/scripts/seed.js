@@ -1,25 +1,35 @@
+// scripts/seed.js
+
 const mongoose = require("mongoose");
+const dotenv = require("dotenv");
 const Story = require("../models/Story");
 const User = require("../models/User");
 
-// ✅ Updated MongoDB Atlas URI
-const MONGO_URI = "mongodb+srv://iturabayo:tech2025@cluster0.bd8tgsr.mongodb.net/hertechstory?retryWrites=true&w=majority&appName=Cluster0";
+// ✅ Load .env config
+dotenv.config();
+
+// ✅ MongoDB Atlas connection string (from environment)
+const MONGO_URI =
+  process.env.MONGO_URI ||
+  "mongodb+srv://iturabayo:tech2025@cluster0.bd8tgsr.mongodb.net/hertechstory?retryWrites=true&w=majority&appName=Cluster0";
 
 const seedStories = async () => {
   try {
     await mongoose.connect(MONGO_URI);
     console.log("✅ Connected to MongoDB");
 
+    // ✅ Find seed users
     const admins = await User.find({
       email: { $in: ["thealphamich@gmail.com", "turabayoimmacule@gmail.com"] },
     });
+
     const users = await User.find({
       email: { $in: ["bayisengeodette9@gmail.com", "felixmurenzi@gmail.com"] },
     });
 
     const sampleStories = [];
 
-    // ✅ Admin Stories (Published)
+    // ✅ Admin stories (published)
     admins.forEach((admin) => {
       sampleStories.push({
         user: admin._id,
@@ -36,7 +46,7 @@ const seedStories = async () => {
       });
     });
 
-    // ✅ Regular User Stories (Pending)
+    // ✅ User stories (pending)
     users.forEach((user) => {
       sampleStories.push(
         {
