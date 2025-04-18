@@ -2,13 +2,13 @@
 
 const mongoose = require("mongoose");
 const dotenv = require("dotenv");
+const bcrypt = require("bcryptjs");
 const Story = require("../models/Story");
 const User = require("../models/User");
 
-// ✅ Load .env config
+// ✅ Load environment variables
 dotenv.config();
 
-// ✅ MongoDB Atlas connection string (from environment)
 const MONGO_URI =
   process.env.MONGO_URI ||
   "mongodb+srv://iturabayo:tech2025@cluster0.bd8tgsr.mongodb.net/hertechstory?retryWrites=true&w=majority&appName=Cluster0";
@@ -18,11 +18,23 @@ const seedStories = async () => {
     await mongoose.connect(MONGO_URI);
     console.log("✅ Connected to MongoDB");
 
-    // ✅ Find seed users
-    const admins = await User.find({
-      email: { $in: ["thealphamich@gmail.com", "turabayoimmacule@gmail.com"] },
-    });
+    // ✅ Create test admin user if not exists
+    const existingAdmin = await User.findOne({ email: "thealphamich@gmail.com" });
+    let admin;
+    if (!existingAdmin) {
+      admin = await User.create({
+        name: "Mich Admin",
+        email: "thealphamich@gmail.com",
+        password: "$2b$12$xUZMWW2qO4TdIdBLN3iDfurdJ6fUk3vmS14vMo/WChjOHLWK5enfG", // hashed "123"
+        role: "admin",
+        onboarded: true,
+      });
+      console.log("✅ Admin user created");
+    } else {
+      admin = existingAdmin;
+    }
 
+    // ✅ Fetch other seed users
     const users = await User.find({
       email: { $in: ["bayisengeodette9@gmail.com", "felixmurenzi07@gmail.com"] },
     });
@@ -30,20 +42,18 @@ const seedStories = async () => {
     const sampleStories = [];
 
     // ✅ Admin stories (published)
-    admins.forEach((admin) => {
-      sampleStories.push({
-        user: admin._id,
-        title: "Admin Video Insight",
-        storyType: "video",
-        videoUrl: "/uploads/video/sample_admin.mp4",
-        transcription: "This is a powerful story about leadership in tech.",
-        category: "Innovation",
-        location: "Admin HQ",
-        coordinates: { type: "Point", coordinates: [30.0589, -1.9499] },
-        views: 100,
-        shares: 10,
-        status: "published",
-      });
+    sampleStories.push({
+      user: admin._id,
+      title: "Admin Video Insight",
+      storyType: "video",
+      videoUrl: "/uploads/video/sample_admin.mp4",
+      transcription: "This is a powerful story about leadership in tech.",
+      category: "Innovation",
+      location: "Admin HQ",
+      coordinates: { type: "Point", coordinates: [30.0589, -1.9499] },
+      views: 100,
+      shares: 10,
+      status: "published",
     });
 
     // ✅ User stories (pending)
