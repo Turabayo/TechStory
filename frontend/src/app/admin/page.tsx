@@ -23,11 +23,19 @@ import useAuth from "../../hooks/useAuth";
 import { utils, writeFile } from "xlsx";
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, Filler);
+interface AuthUser {
+  id: string;
+  name: string;
+  email: string;
+  role: "user" | "admin";
+  onboarded: boolean;
+}
+
 const API = process.env.NEXT_PUBLIC_API_URL;
 const drawerWidth = 240;
 
 const AdminDashboard = () => {
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading } = useAuth() as { user: AuthUser | null; loading: boolean };
   const router = useRouter();
 
   const [activeTab, setActiveTab] = useState("Dashboard");
