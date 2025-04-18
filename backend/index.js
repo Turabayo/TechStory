@@ -21,16 +21,21 @@ const PORT = process.env.PORT || 5000;
 // ✅ CORS Configuration
 const allowedOrigins = [
   "http://localhost:3000",
-  "https://hertechstoryempoweringwomenempoweringgenerations-kcy2m8jmc.vercel.app", // ✅ Add your actual Vercel frontend domain here
+  "https://hertechstoryempoweringwomenempoweringgenerations-kcy2m8jmc.vercel.app",
+  "https://hertechstoryempoweringwomenempoweringgenerations-njuzkzkp5.vercel.app", // newly generated one
 ];
 
+// You may also allow all *.vercel.app domains using RegExp (optional/flexible)
 app.use(cors({
   origin: function (origin, callback) {
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error("Not allowed by CORS"));
+    if (!origin) return callback(null, true); // allow Postman, curl, etc.
+    if (
+      allowedOrigins.includes(origin) ||
+      /\.vercel\.app$/.test(origin)       // ✅ Allow all Vercel preview domains
+    ) {
+      return callback(null, true);
     }
+    return callback(new Error("Not allowed by CORS"));
   },
   credentials: true,
 }));
@@ -59,7 +64,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/stories', storyRoutes);
 app.use('/api/comments', commentRoutes);
 app.use('/api/analytics', analyticsRoutes);
-app.use('/api/dev', seedRoutes);
+app.use('/api/dev', seedRoutes); // For seeding stories
 
 // ✅ Root Health Check
 app.get('/', (req, res) => {
