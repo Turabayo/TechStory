@@ -1,16 +1,23 @@
-# backend/.gitignore
-
-# Node modules
-/node_modules
-
-# Environment variables
+# 🔒 Environment Variables
 .env
 .env.local
 
-# Logs
+# 📦 Node Modules
+/node_modules
+
+# 📂 Build & Logs
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+.pnpm-debug.log*
 
-# Uploads (optional – remove this if you want to commit sample files)
-/uploads
+# 📤 File Uploads (audio/video — optional)
+uploads/
+
+# 📝 IDE & OS Specific
+.DS_Store
+*.pem
+*.log
+
+# 👨‍💻 VSCode Settings (optional)
+.vscode/
