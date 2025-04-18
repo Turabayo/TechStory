@@ -11,6 +11,7 @@ const authRoutes = require('./routes/authRoutes');
 const storyRoutes = require('./routes/storyRoutes');
 const commentRoutes = require('./routes/commentRoutes');
 const analyticsRoutes = require('./routes/analyticsRoutes');
+const seedRoutes = require('./routes/seedRoutes');
 
 dotenv.config();
 
@@ -58,6 +59,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/stories', storyRoutes);
 app.use('/api/comments', commentRoutes);
 app.use('/api/analytics', analyticsRoutes);
+app.use('/api/dev', seedRoutes);
 
 // ✅ Root Health Check
 app.get('/', (req, res) => {
