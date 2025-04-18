@@ -23,7 +23,7 @@ import useAuth from "../../hooks/useAuth";
 import { utils, writeFile } from "xlsx";
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, Filler);
-
+const API = process.env.NEXT_PUBLIC_API_URL;
 const drawerWidth = 240;
 
 const AdminDashboard = () => {
@@ -42,21 +42,27 @@ const AdminDashboard = () => {
   const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
-    fetchAllAdminData();
-  }, []);
+    if (!authLoading && user) {
+      if (user.role !== "admin") {
+        router.push("/user"); // redirect non-admins to user dashboard
+      } else {
+        fetchAllAdminData(); // only fetch if user is admin
+      }
+    }
+  }, [authLoading, user]);  
 
   const fetchAllAdminData = async () => {
     try {
       const token = localStorage.getItem("token");
       const config = { headers: { Authorization: `Bearer ${token}` } };
-
+  
       const [usersRes, storiesRes, commentsRes, analyticsRes] = await Promise.all([
-        axios.get("http://localhost:5000/api/auth/users", config),
-        axios.get("http://localhost:5000/api/stories/admin/all", config),
-        axios.get("http://localhost:5000/api/comments", config),
-        axios.get("http://localhost:5000/api/analytics/stats", config),
+        axios.get(`${API}/api/auth/users`, config),
+        axios.get(`${API}/api/stories/admin/all`, config),
+        axios.get(`${API}/api/comments`, config),
+        axios.get(`${API}/api/analytics/stats`, config),
       ]);
-
+  
       setUsers(usersRes.data);
       setStories(storiesRes.data);
       setComments(commentsRes.data);
@@ -67,7 +73,7 @@ const AdminDashboard = () => {
       setLoading(false);
     }
   };
-
+  
   const handleLogout = () => {
     localStorage.removeItem("token");
     router.push("/auth/signin");
@@ -75,7 +81,7 @@ const AdminDashboard = () => {
 
   const updateStoryStatus = async (id: string, status: string) => {
     try {
-      await axios.patch(`http://localhost:5000/api/stories/${id}/status`, { status }, {
+      await axios.patch(`${API}/api/stories/${id}/status`, { status }, {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       });
       fetchAllAdminData();
@@ -86,7 +92,7 @@ const AdminDashboard = () => {
 
   const deleteStory = async (id: string) => {
     try {
-      await axios.delete(`http://localhost:5000/api/stories/${id}`, {
+      await axios.delete(`${API}/api/stories/${id}`, {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       });
       fetchAllAdminData();
@@ -97,7 +103,7 @@ const AdminDashboard = () => {
 
   const promoteDemoteUser = async (id: string, role: string) => {
     try {
-      await axios.patch(`http://localhost:5000/api/auth/users/${id}/role`, { role }, {
+      await axios.patch(`${API}/api/auth/users/${id}/role`, { role }, {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       });
       fetchAllAdminData();
@@ -108,7 +114,7 @@ const AdminDashboard = () => {
 
   const deleteUser = async (id: string) => {
     try {
-      await axios.delete(`http://localhost:5000/api/auth/users/${id}`, {
+      await axios.delete(`${API}/api/auth/users/${id}`, {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       });
       fetchAllAdminData();
@@ -119,7 +125,7 @@ const AdminDashboard = () => {
 
   const deleteComment = async (id: string) => {
     try {
-      await axios.delete(`http://localhost:5000/api/comments/${id}`, {
+      await axios.delete(`${API}/api/comments/${id}`, {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       });
       fetchAllAdminData();
@@ -282,9 +288,9 @@ const AdminDashboard = () => {
     </Box>
   );
 
-  if (authLoading || loading) {
+  if (authLoading || !user || loading) {
     return <CircularProgress sx={{ display: "block", margin: "auto", mt: 5 }} />;
-  }
+  }  
 
   return (
     <Box sx={{ display: "flex" }}>

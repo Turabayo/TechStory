@@ -24,7 +24,7 @@ const seedStories = async () => {
     });
 
     const users = await User.find({
-      email: { $in: ["bayisengeodette9@gmail.com", "felixmurenzi@gmail.com"] },
+      email: { $in: ["bayisengeodette9@gmail.com", "felixmurenzi07@gmail.com"] },
     });
 
     const sampleStories = [];
