@@ -2,19 +2,24 @@ const mongoose = require("mongoose");
 const Story = require("../models/Story");
 const User = require("../models/User");
 
-const MONGO_URI = "mongodb://localhost:27017/hertechstory";
+// ✅ Updated MongoDB Atlas URI
+const MONGO_URI = "mongodb+srv://iturabayo:tech2025@cluster0.bd8tgsr.mongodb.net/hertechstory?retryWrites=true&w=majority&appName=Cluster0";
 
 const seedStories = async () => {
   try {
     await mongoose.connect(MONGO_URI);
     console.log("✅ Connected to MongoDB");
 
-    const admins = await User.find({ email: { $in: ["thealphamich@gmail.com", "turabayoimmacule@gmail.com"] } });
-    const users = await User.find({ email: { $in: ["bayisengeodette9@gmail.com", "felixmurenzi@gmail.com"] } });
+    const admins = await User.find({
+      email: { $in: ["thealphamich@gmail.com", "turabayoimmacule@gmail.com"] },
+    });
+    const users = await User.find({
+      email: { $in: ["bayisengeodette9@gmail.com", "felixmurenzi@gmail.com"] },
+    });
 
     const sampleStories = [];
 
-    // Admin Stories (published)
+    // ✅ Admin Stories (Published)
     admins.forEach((admin) => {
       sampleStories.push({
         user: admin._id,
@@ -31,7 +36,7 @@ const seedStories = async () => {
       });
     });
 
-    // Regular User Stories (pending)
+    // ✅ Regular User Stories (Pending)
     users.forEach((user) => {
       sampleStories.push(
         {
